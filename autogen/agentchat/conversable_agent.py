@@ -888,6 +888,7 @@ class ConversableAgent(Agent):
         Returns:
             str or dict or None: reply. None if no reply is generated.
         """
+        print(self.llm_config)
         if all((messages is None, sender is None)):
             error_msg = f"Either {messages=} or {sender=} must be provided."
             logger.error(error_msg)
@@ -1217,7 +1218,12 @@ class ConversableAgent(Agent):
             error_msg = "To define a function, agent must have an llm_config"
             logger.error(error_msg)
             raise AssertionError(error_msg)
-        self.llm_config["functions"].append(signature)
+        if "functions" in self.llm_config.keys():
+            self.llm_config["functions"].append(signature) # update
+        else:
+            self.llm_config["functions"] = []
+            self.llm_config["functions"].append(signature)
+        
 
     def can_execute_function(self, name: str) -> bool:
         """Whether the agent can execute the function."""
