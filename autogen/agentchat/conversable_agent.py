@@ -888,7 +888,6 @@ class ConversableAgent(Agent):
         Returns:
             str or dict or None: reply. None if no reply is generated.
         """
-        print(self.llm_config)
         if all((messages is None, sender is None)):
             error_msg = f"Either {messages=} or {sender=} must be provided."
             logger.error(error_msg)
@@ -1223,6 +1222,8 @@ class ConversableAgent(Agent):
         else:
             self.llm_config["functions"] = []
             self.llm_config["functions"].append(signature)
+            
+        self.client = OpenAIWrapper(**self.llm_config)
         
 
     def can_execute_function(self, name: str) -> bool:
