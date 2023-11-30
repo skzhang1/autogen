@@ -82,7 +82,7 @@ class OpenAIWrapper:
         else:
             self._clients = [self._client(extra_kwargs, openai_config)]
             self._config_list = [extra_kwargs]
-    
+
     def _process_for_azure(self, config: Dict, extra_kwargs: Dict, segment: str = "default"):
         # deal with api_version
         query_segment = f"{segment}_query"
@@ -339,10 +339,8 @@ class OpenAIWrapper:
             # Functions are not supported, so ensure streaming is disabled
             params = params.copy()
             params["stream"] = False
-            print("------------")
-            if 'functions' in params:
-                params['functions'] = [params['functions'][0][0]]
-                print(params['functions'])
+            print("------------------------")
+            print(params)
             response = completions.create(**params)
         return response
 

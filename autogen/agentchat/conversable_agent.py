@@ -1218,13 +1218,12 @@ class ConversableAgent(Agent):
             logger.error(error_msg)
             raise AssertionError(error_msg)
         if "functions" in self.llm_config.keys():
-            self.llm_config["functions"].append(signature) # update
+            self.llm_config["functions"].append(signature)  # update
         else:
             self.llm_config["functions"] = []
             self.llm_config["functions"].append(signature)
-            
+
         self.client = OpenAIWrapper(**self.llm_config)
-        
 
     def can_execute_function(self, name: str) -> bool:
         """Whether the agent can execute the function."""
