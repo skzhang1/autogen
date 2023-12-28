@@ -4,9 +4,132 @@
         <title>AutoGen Blog</title>
         <link>https://microsoft.github.io/autogen/blog</link>
         <description>AutoGen Blog</description>
-        <lastBuildDate>Fri, 01 Dec 2023 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sat, 23 Dec 2023 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[AgentOptimizer - An Agentic Way to Train Your LLM Agent]]></title>
+            <link>https://microsoft.github.io/autogen/blog/2023/12/23/AgentOptimizer</link>
+            <guid>AgentOptimizer - An Agentic Way to Train Your LLM Agent</guid>
+            <pubDate>Sat, 23 Dec 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[Overall structure of AgentOptimizer]]></description>
+            <content:encoded><![CDATA[<p><img src="img/agentoptimizer.png" alt="Overall structure of AgentOptimizer"/></p><p><strong>TL;DR:</strong>
+Introducing <strong>AgentOptimizer</strong>, a new class for training LLM agents in the era of LLMs as a service.
+<strong>AgentOptimizer</strong> is able to prompt autogen agents to iteratively optimize its function/skills according to the historical conversation and performance.
+Checkout one implementation for <strong>AgentOptimizer</strong> on <a href="https://github.com/hendrycks/math">MATH</a> dataset
+<a href="https://github.com/microsoft/autogen/blob/main/notebook/agentchat_agentoptimizer.ipynb">here</a>.</p><p>Paper is coming soon!</p><h2>Introduction</h2><p>In traditional ML pipeline, we train a model by updating its weights according to the loss on the training set, while in the era of LLM agents, how should we train an agent?
+Here, we take an initial step towards the agent training.
+Inspired by the <a href="https://platform.openai.com/docs/guides/function-calling">function calling</a> capabilities provided by OpenAI,
+we draw an analogy between model weights and agent functions/skills, and update an agent’s functions/skills based on its historical performance on a training set.
+Specifically, we propose to use the function calling capabilities to formulate the actions that optimize the agents’ functions as a set of function calls,
+to support iteratively <strong>adding, revising, and removing</strong> existing functions.
+As an agentic way of training an agent, our approach helps enhance the agents’ abilities without requiring access to the LLMs weights.</p><h2>AgentOptimizer</h2><p><strong>AgentOptimizer</strong> is a class designed to optimize the agents by improving their function calls.
+It contains two core methods:</p><ol><li><code>step()</code>: <code>step()</code> takes three inputs, including the previous conversation history (history), the statistical information of solving previous problems (statistic), and the current functions (current_functions).</li></ol><pre><code class="language-python">actions, updated_functions = AgentOptimizer.step(history, statistic, current_functions)
+</code></pre><p>It has two outputs <code>actions</code> and <code>updated_functions</code>. <code>actions</code> is a series of actions to manipulate the current functions. And <code>updated_functions</code> is the updated functions after the actions are applied (including code implementation).</p><ol start="2"><li><code>update_function_call()</code>:
+This method takes the agents and actions as input. It updates the functions registered in these agents according to the actions from <code>step()</code>.
+For AssistantAgent, it first uses <a href="https://microsoft.github.io/autogen/docs/reference/agentchat/conversable_agent/#update_function_signature">update_function_signature</a> to update the function signatures.
+Then, it updates the functions in the MathUserproxyAgent with the corresponding code implementation gained from <code>step()</code>.</li></ol><p>Sometimes, the function signatures (JSON schema) returned by the <code>step()</code> may not be valid, and the generated code may also face syntax errors.
+<strong>AgentOptimizer</strong> includes mechanisms to check the (1) validity of the function signatures and (2) code implementation before updating the functions.
+Moreover, it also includes mechanisms to check whether each action is feasible, such as avoiding the removal of a function that is not in the current functions due to hallucination.</p><h2>Pseudocode for the optimization process</h2><p>The optimization process is as follows:</p><pre><code class="language-python">for - in range(EPOCH):
+    history, statistic, current_functions = solve_problems(train_problems)
+    actions, updated_functions = AgentOptimizer.step(history, statistic, current_functions)
+    AgentOptimizer.update_function_call(actions)
+</code></pre><p>Given a prepared training dataset, the agents iteratively solve problems from the training set to obtain conversation history and statistical information.
+The functions are then improved using AgentOptimizer.
+Each iteration can be regarded as one training step analogous to traditional machine learning, with the optimization elements being the functions that agents have.
+After EPOCH iterations, the agents are expected to obtain better functions that may be used in future tasks</p><h2>The implementation technology behind the AgentOptimizer</h2><p>To obtain stable and structured function signatures and code implementations from AgentOptimizer,
+we leverage the function calling capabilities provided by OpenAI to formulate the actions that manipulate the functions as a set of function calls.
+Specifically, we introduce three function calls to manipulate the current functions at each step: <code>add_function</code>, <code>remove_function</code>, and <code>revise_function</code>.
+These calls add, remove, and revise functions in the existing function list, respectively.
+This practice could fully leverages the function calling capabilities of GPT-4 and outputs structured functions with more stable signatures and code implementation.
+Below is the JSON schema of these function calls:</p><ol><li><code>add_function</code>: Add one new function that may be used in the future tasks.</li></ol><pre><code class="language-python">ADD_FUNC = {
+    &quot;type&quot;: &quot;function&quot;,
+    &quot;function&quot;: {
+        &quot;name&quot;: &quot;add_function&quot;,
+        &quot;description&quot;: &quot;Add a function in the context of the conversation. Necessary Python packages must be declared. The name of the function MUST be the same with the function name in the code you generated.&quot;,
+        &quot;parameters&quot;: {
+            &quot;type&quot;: &quot;object&quot;,
+            &quot;properties&quot;: {
+                &quot;name&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;The name of the function in the code implementation.&quot;
+                },
+                &quot;description&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;A short description of the function.&quot;
+                },
+                &quot;arguments&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;JSON schema of arguments encoded as a string. Please note that the JSON schema only supports specific types including string, integer, object, array, boolean. (do not have float type) For example: { \&quot;url\&quot;: { \&quot;type\&quot;: \&quot;string\&quot;, \&quot;description\&quot;: \&quot;The URL\&quot;, }}. Please avoid the error &#x27;array schema missing items&#x27; when using array type.&quot;
+                },
+                &quot;packages&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;A list of package names imported by the function, and that need to be installed with pip prior to invoking the function. This solves ModuleNotFoundError. It should be string, not list.&quot;
+                },
+                &quot;code&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;The implementation in Python. Do not include the function declaration.&quot;
+                }
+            },
+            &quot;required&quot;: [&quot;name&quot;, &quot;description&quot;, &quot;arguments&quot;, &quot;packages&quot;, &quot;code&quot;]
+        }
+    }
+}
+</code></pre><ol start="2"><li><code>revise_function</code>: Revise one existing function (code implementation, function signature) in the current function list according to the conversation history and performance.</li></ol><pre><code class="language-python">REVISE_FUNC = {
+    &quot;type&quot;: &quot;function&quot;,
+    &quot;function&quot;: {
+        &quot;name&quot;: &quot;revise_function&quot;,
+        &quot;description&quot;: &quot;Revise a function in the context of the conversation. Necessary Python packages must be declared. The name of the function MUST be the same with the function name in the code you generated.&quot;,
+        &quot;parameters&quot;: {
+            &quot;type&quot;: &quot;object&quot;,
+            &quot;properties&quot;: {
+                &quot;name&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;The name of the function in the code implementation.&quot;
+                },
+                &quot;description&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;A short description of the function.&quot;
+                },
+                &quot;arguments&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;JSON schema of arguments encoded as a string. Please note that the JSON schema only supports specific types including string, integer, object, array, boolean. (do not have float type) For example: { \&quot;url\&quot;: { \&quot;type\&quot;: \&quot;string\&quot;, \&quot;description\&quot;: \&quot;The URL\&quot;, }}. Please avoid the error &#x27;array schema missing items&#x27; when using array type.&quot;
+                },
+                &quot;packages&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;A list of package names imported by the function, and that need to be installed with pip prior to invoking the function. This solves ModuleNotFoundError. It should be string, not list.&quot;
+                },
+                &quot;code&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;The implementation in Python. Do not include the function declaration.&quot;
+                }
+            },
+            &quot;required&quot;: [&quot;name&quot;, &quot;description&quot;, &quot;arguments&quot;, &quot;packages&quot;, &quot;code&quot;]
+        }
+    }
+}
+</code></pre><ol start="3"><li><code>remove_function</code>: Remove one existing function in the current function list. It is used to remove the functions that are not useful (redundant) in the future tasks.</li></ol><pre><code class="language-python">REMOVE_FUNC = {
+    &quot;type&quot;: &quot;function&quot;,
+    &quot;function&quot;: {
+        &quot;name&quot;: &quot;remove_function&quot;,
+        &quot;description&quot;: &quot;Remove one function in the context of the conversation. Once remove one function, the assistant will not use this function in future conversation.&quot;,
+        &quot;parameters&quot;: {
+            &quot;type&quot;: &quot;object&quot;,
+            &quot;properties&quot;: {
+                &quot;name&quot;: {
+                    &quot;type&quot;: &quot;string&quot;,
+                    &quot;description&quot;: &quot;The name of the function in the code implementation.&quot;
+                }
+            },
+            &quot;required&quot;: [&quot;name&quot;]
+        }
+    }
+}
+</code></pre><h2>Limitation &amp; Future work</h2><ol><li>Unlike gradient descent in traditional machine learning training processes, each optimization step does not necessarily lead to better performance on the training set.
+When the training epoch is small, the agent’s performance may even decrease. One urgent task is to design a better mechanism to guide the optimization process.</li><li>The <a href="https://github.com/microsoft/autogen/blob/main/notebook/agentchat_agentoptimizer.ipynb">Current implementation</a> of AgentOptimizer is mainly for illustration purpose and is just a proof of concept.
+It is not formally integrated into the autogen with a general interface like optimizing any kinds of agents in any tasks.
+Currently, it only supports optimizing the multi-agent system in solving problems from <a href="https://github.com/hendrycks/math">MATH</a> dataset. We will integrate it into autogen with more general interface in the future.</li></ol>]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[AutoGen Studio: Interactively Explore Multi-Agent Workflows]]></title>
             <link>https://microsoft.github.io/autogen/blog/2023/12/01/AutoGenStudio</link>
