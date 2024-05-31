@@ -4,10 +4,169 @@
         <title>AutoGen Blog</title>
         <link>https://microsoft.github.io/autogen/blog</link>
         <description>AutoGen Blog</description>
-        <lastBuildDate>Mon, 11 Mar 2024 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 24 May 2024 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Agents in AutoGen]]></title>
+            <link>https://microsoft.github.io/autogen/blog/2024/05/24/Agent</link>
+            <guid>https://microsoft.github.io/autogen/blog/2024/05/24/Agent</guid>
+            <pubDate>Fri, 24 May 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[agents]]></description>
+            <content:encoded><![CDATA[<p><img decoding="async" loading="lazy" alt="agents" src="https://microsoft.github.io/autogen/assets/images/agents-49c89d4e594330ec675afc4f066198ab.png" width="1024" height="1024" class="img_ev3q"></p>
+<p><strong>TL;DR</strong></p>
+<ul>
+<li><strong>AutoGen agents unify different agent definitions.</strong></li>
+<li><strong>When talking about multi vs. single agents, it is beneficial to clarify whether we refer to the interface or the architecture.</strong></li>
+</ul>
+<p>I often get asked two common questions:</p>
+<ol>
+<li>What's an agent?</li>
+<li>What are the pros and cons of multi vs. single agent?</li>
+</ol>
+<p>This blog collects my thoughts from several interviews and recent learnings.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="whats-an-agent">What's an agent?<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#whats-an-agent" class="hash-link" aria-label="Direct link to What's an agent?" title="Direct link to What's an agent?">​</a></h2>
+<p>There are many different types of definitions of agents. When building AutoGen, I was looking for
+the most generic notion that can incorporate all these different types of definitions. And to do that we
+really need to think about the minimal set of concepts that are needed.</p>
+<p>In AutoGen, we think about the agent as an entity that can act on behalf of human intent. They can send messages, receive messages, respond to other agents after taking actions and interact with other agents. We think it's a minimal set of capabilities that an agent needs to
+have underneath. They can have different types of backends to support them to perform
+actions and generate replies. Some of the agents can use AI models to generate replies. Some other agents can use functions
+underneath to generate tool-based replies and other agents can use human input as a way to reply to
+other agents. And you can also have agents that mix these different types of backends or have more
+complex agents that have internal conversations among multiple agents. But on the surface, other
+agents still perceive it as a single entity to communicate to.</p>
+<p>With this definition, we can incorporate both very simple agents that can solve simple tasks with
+a single backend, but also we can have agents that are composed of multiple simpler agents. One can recursively build up more powerful agents. The
+agent concept in AutoGen can cover all these different complexities.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="what-are-the-pros-and-cons-of-multi-vs-single-agent">What are the pros and cons of multi vs. single agent?<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#what-are-the-pros-and-cons-of-multi-vs-single-agent" class="hash-link" aria-label="Direct link to What are the pros and cons of multi vs. single agent?" title="Direct link to What are the pros and cons of multi vs. single agent?">​</a></h2>
+<p>This question can be asked in a variety of ways.</p>
+<blockquote>
+<p>Why should I use multiple agents instead of a single agent?</p>
+</blockquote>
+<blockquote>
+<p>Why think about multi-agents when we don't have a strong single agent?</p>
+</blockquote>
+<blockquote>
+<p>Does multi-agent increase the complexity, latency and cost?</p>
+</blockquote>
+<blockquote>
+<p>When should I use multi-agents vs. single agent?</p>
+</blockquote>
+<p>When we use the word 'multi-agent' and 'single-agent', I think there
+are at least two different dimensions we need to think about.</p>
+<ul>
+<li>Interface. This means, from the user's point of view, do they interact with the system in a single
+interaction point or do they see explicitly multiple agents working and need to interact with multiple of
+them?</li>
+<li>Architecture. Are there multiple agents underneath running at the backend?</li>
+</ul>
+<p>A particular system can have a single-agent interface and a multi-agent architecture, but the users don't need to know that.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="interface">Interface<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#interface" class="hash-link" aria-label="Direct link to Interface" title="Direct link to Interface">​</a></h3>
+<p>A single interaction point can make many applications' user experience
+more straightforward. There are also cases where it is not the best solution. For example, when the application is about having multiple
+agents debate about a subject, the users need to see what each agent says.
+In that case, it's beneficial for them to actually see the multi-agents' behavior. Another example is the social
+simulation experiment: People also want to see the behavior of each agent.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="architecture">Architecture<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#architecture" class="hash-link" aria-label="Direct link to Architecture" title="Direct link to Architecture">​</a></h3>
+<p>The multi-agent design of the architecture is easier to maintain,
+understand and extend than a single agent system. Even for the single agent
+based interface, a multi-agent implementation can potentially make the system more modular, and
+easier for developers to add or remove components of functionality. It's very important to
+recognize that the multi-agent architecture is a good way to build a single agent. While not obvious, it has a root in the society of mind theory by Marvin Minsky in 1986.
+Starting from simple agents, one can compose and coordinate them
+effectively to exhibit a higher level of intelligence.</p>
+<p>We don't have a good single agent that
+can do everything we want, yet. And why is that? It could be because we haven't figured out the right
+way of composing the multi-agent to build this powerful single agent. But firstly, we need to have the
+framework that allows easy experimentation of these different ways of combining models and agents. For example,</p>
+<ul>
+<li>Different <a href="https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns">conversation patterns</a> like <a href="https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns#sequential-chats">sequential chats</a>, <a href="https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns#group-chat">group chat</a>, <a href="https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns#constrained-speaker-selection">constrained group chat</a>, <a href="https://microsoft.github.io/autogen/docs/topics/groupchat/customized_speaker_selection">customized group chat</a>, <a href="https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns#nested-chats">nested chat</a> and recursive composition of them.</li>
+<li>Different prompting and reasoning techniques such as <a href="https://microsoft.github.io/autogen/docs/topics/prompting-and-reasoning/reflection">reflection</a>.</li>
+<li><a href="https://microsoft.github.io/autogen/docs/tutorial/tool-use">Tool use</a> and <a href="https://microsoft.github.io/autogen/docs/tutorial/code-executors">code execution</a>, as well as their <a href="https://microsoft.github.io/autogen/docs/topics/code-execution/user-defined-functions">combination</a>.</li>
+<li><a href="https://microsoft.github.io/autogen/docs/topics/task_decomposition">Planning and task decomposition</a>.</li>
+<li><a href="https://microsoft.github.io/autogen/docs/topics/retrieval_augmentation">Retrieve augmentation</a>.</li>
+<li>Integrating multiple <a href="https://microsoft.github.io/autogen/blog/2023/11/09/EcoAssistant">models</a>, <a href="https://microsoft.github.io/autogen/docs/topics/openai-assistant/gpt_assistant_agent">APIs</a>, <a href="https://microsoft.github.io/autogen/blog/2023/11/06/LMM-Agent">modalities</a> and <a href="https://microsoft.github.io/autogen/blog/2023/10/26/TeachableAgent">memories</a>.</li>
+</ul>
+<p>My own experience is that if people practice using multi-agents to solve a problem, they often reach a solution faster.
+I have high hopes that they can figure out a robust way of building a complex, multi-faceted single agent using this way.
+Otherwise there are too many possibilities to build this single agent. Without good modularity, it is prone to hitting a complexity limit while keeping the system easy to maintain and modify.</p>
+<p>On the other hand, we
+don't have to stop there. We can think about a multi-agent system as a way to multiply the
+power of a single agent. We can connect them with other agents to accomplish bigger goals.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="benefits-of-multi-agents">Benefits of multi-agents<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#benefits-of-multi-agents" class="hash-link" aria-label="Direct link to Benefits of multi-agents" title="Direct link to Benefits of multi-agents">​</a></h3>
+<p>There are at least two types of applications that benefit from multi-agent systems.</p>
+<ul>
+<li>Single-agent interface.
+Developers often find that they need to extend the system with different capabilities, tools, etc. And if
+they implement that single agent interface with a multi-agent architecture, they can often increase the capability to
+handle more complex tasks or improve the quality of the response. One example is complex data analytics.
+It often requires agents of different roles to solve a task. Some agents are good at retrieving the data and
+presenting to others. Some other agents are good at running deep analytics and providing insights. We can also have agents which can critique and suggest more actions. Or agents that can do planning, and so on.
+Usually, to accomplish a complex task, one can build these agents with different roles.</li>
+</ul>
+<p>An example of a real-world production use case:</p>
+<blockquote>
+<p>If you don't know about Chi Wang and Microsoft Research's work, please check it out. I want to give a real world production use case for Skypoint AI platform client Tabor AI <a href="https://tabor.ai/" target="_blank" rel="noopener noreferrer">https://tabor.ai</a> AI Copilot for Medicare brokers - selecting a health plan every year for seniors (65 million seniors have to do this every year in the US) is a cumbersome and frustrating task. This process took hours to complete by human research, now with AI agents 5 to 10 minutes without compromising on quality or accuracy of the results. It's fun to see agents doing retail shopping etc. where accuracy is not that mission critical. AI in regulated industries like healthcare, public sector, financial services is a different beast, this is Skypoint AI platform (AIP) focus.</p>
+<blockquote>
+<p>Tisson Mathew, CEO @ Skypoint</p>
+</blockquote>
+</blockquote>
+<ul>
+<li>Multi-agent interface. For example, a chess game needs to have at
+least two different players. A
+football game involves even more entities. Multi-agent debates
+and social
+simulations are good examples, too.</li>
+</ul>
+<p><img decoding="async" loading="lazy" alt="leadership" src="https://microsoft.github.io/autogen/assets/images/leadership-28508416d262003dd8489b5cdb650169.png" width="826" height="476" class="img_ev3q"></p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="cost-of-multi-agents">Cost of multi-agents<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#cost-of-multi-agents" class="hash-link" aria-label="Direct link to Cost of multi-agents" title="Direct link to Cost of multi-agents">​</a></h3>
+<p>Very complex multi-agent systems with leading frontier models are expensive, but compared to having humans accomplish the same task they can be exponentially more affordable.</p>
+<blockquote>
+<p>While not inexpensive to operate, our multi-agent powered venture analysis system at BetterFutureLabs is far more affordable and exponentially faster than human analysts performing a comparable depth of analysis.</p>
+<blockquote>
+<p>Justin Trugman, Cofounder &amp; Head of Technology at BetterFutureLabs</p>
+</blockquote>
+</blockquote>
+<p>Will using multiple agents always increase the cost, latency, and chance of failures, compared to using a single agent? It depends on how the multi-agent system is designed, and surprisingly, the answer can, actually, be the opposite.</p>
+<ul>
+<li>Even if the performance of a single agent is good enough, you may also want to make this single agent teach some other relatively cheaper agent so that they can become
+better with low cost. <a href="https://microsoft.github.io/autogen/blog/2023/11/09/EcoAssistant">EcoAssistant</a> is a good example of combining GPT-4 and GPT-3.5 agents to reduce the cost while improving the performance even compared to using a single GPT-4 agent.</li>
+<li>A recent use case reports that sometimes using multi-agents with a cheap model can outperform a single agent with an expensive model:</li>
+</ul>
+<blockquote>
+<p>Our research group at Tufts University continues to make important improvements in addressing the challenges students face when transitioning from undergraduate to graduate-level courses, particularly in the Doctor of Physical Therapy program at the School of Medicine. With the ongoing support from the Data Intensive Studies Center (DISC) and our collaboration with Chi Wang's team at Microsoft, we are now leveraging StateFlow with Autogen to create even more effective assessments tailored to course content. This State-driven workflow approach complements our existing work using multiple agents in sequential chat, teachable agents, and round-robin style debate formats…
+By combining StateFlow with multiple agents it’s possible to maintain high-quality results/output while using more cost-effective language models (GPT 3.5). This cost savings, coupled with the increased relevance and accuracy of our results, has really demonstrated for us Autogen’s immense potential for developing efficient and scalable educational solutions that can be adapted to various contexts and budgets.</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>Benjamin D Stern, MS, DPT, Assistant Professor, Doctor of Physical Therapy Program,
+Tufts University School of Medicine</p>
+</blockquote>
+</blockquote>
+<ul>
+<li><a href="https://microsoft.github.io/autogen/blog/2024/03/11/AutoDefense/Defending%20LLMs%20Against%20Jailbreak%20Attacks%20with%20AutoDefense">AutoDefense</a> demonstrates that using multi-agents reduces the risk of suffering from jailbreak attacks.</li>
+</ul>
+<p>There are certainly tradeoffs to make. The large design space of multi-agents offers these tradeoffs and opens up new opportunites for optimization.</p>
+<blockquote>
+<p>Over a year since the debut of Ask AT&amp;T, the generative AI platform to which we’ve onboarded over 80,000 users, AT&amp;T has been enhancing its capabilities by incorporating 'AI Agents'. These agents, powered by the Autogen framework pioneered by Microsoft (<a href="https://microsoft.github.io/autogen/blog/2023/12/01/AutoGenStudio/" target="_blank" rel="noopener noreferrer">https://microsoft.github.io/autogen/blog/2023/12/01/AutoGenStudio/</a>), are designed to tackle complicated workflows and tasks that traditional language models find challenging. To drive collaboration, AT&amp;T is contributing back to the open-source project by introducing features that facilitate enhanced security and role-based access for various projects and data.</p>
+<blockquote>
+<p>Andy Markus, Chief Data Officer at AT&amp;T</p>
+</blockquote>
+</blockquote>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="watchread-the-interviewsarticles">Watch/read the interviews/articles<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#watchread-the-interviewsarticles" class="hash-link" aria-label="Direct link to Watch/read the interviews/articles" title="Direct link to Watch/read the interviews/articles">​</a></h2>
+<ul>
+<li>Interview with Joanne Chen from Foundation Capital in <em>AI in the Real World</em> (<a href="https://www.forbes.com/sites/joannechen/2024/05/24/the-promise-of-multi-agent-ai/?sh=2c1e4f454d97" target="_blank" rel="noopener noreferrer">Forbes article</a>, <a href="https://www.youtube.com/watch?v=RLwyXRVvlNk" target="_blank" rel="noopener noreferrer">YouTube</a>).</li>
+<li>Interview with Arthur Holland Michel from The Economist in <a href="https://www.economist.com/science-and-technology/2024/05/13/todays-ai-models-are-impressive-teams-of-them-will-be-formidable" target="_blank" rel="noopener noreferrer"><em>Today’s AI models are impressive. Teams of them will be formidable</em></a>.</li>
+<li>Interview with Thomas Maybrier from Valory in <a href="https://www.youtube.com/watch?v=iMvq_z4LT0U" target="_blank" rel="noopener noreferrer"><em>AI Frontiers</em></a>.</li>
+</ul>
+<p><em>Do you find this note helpful? Would you like to share your thoughts, use cases, findings? Please join our <a href="https://discord.gg/pAbnFJrkgZ" target="_blank" rel="noopener noreferrer">Discord</a> server for discussion.</em></p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="acknowledgements">Acknowledgements<a href="https://microsoft.github.io/autogen/blog/2024/05/24/Agent#acknowledgements" class="hash-link" aria-label="Direct link to Acknowledgements" title="Direct link to Acknowledgements">​</a></h3>
+<p>This blogpost is revised based on feedback from <a href="https://github.com/WaelKarkoub" target="_blank" rel="noopener noreferrer">Wael Karkoub</a>, <a href="https://github.com/marklysze" target="_blank" rel="noopener noreferrer">Mark Sze</a>, <a href="https://github.com/jtrugman" target="_blank" rel="noopener noreferrer">Justin Trugman</a>, <a href="https://github.com/ekzhu" target="_blank" rel="noopener noreferrer">Eric Zhu</a>.</p>]]></content:encoded>
+            <category>thoughts</category>
+            <category>interview notes</category>
+        </item>
         <item>
             <title><![CDATA[AutoDefense - Defend against jailbreak attacks with AutoGen]]></title>
             <link>https://microsoft.github.io/autogen/blog/2024/03/11/AutoDefense/Defending LLMs Against Jailbreak Attacks with AutoDefense</link>
@@ -1541,86 +1700,6 @@ We demonstrate how to use autogen for local LLM application. As an example, we w
 <li><a href="https://github.com/lm-sys/FastChat" target="_blank" rel="noopener noreferrer">Documentation</a> about FastChat.</li>
 </ul>]]></content:encoded>
             <category>LLM</category>
-        </item>
-        <item>
-            <title><![CDATA[MathChat - An Conversational Framework to Solve Math Problems]]></title>
-            <link>https://microsoft.github.io/autogen/blog/2023/06/28/MathChat</link>
-            <guid>https://microsoft.github.io/autogen/blog/2023/06/28/MathChat</guid>
-            <pubDate>Wed, 28 Jun 2023 00:00:00 GMT</pubDate>
-            <description><![CDATA[MathChat WorkFlow]]></description>
-            <content:encoded><![CDATA[<p><img decoding="async" loading="lazy" alt="MathChat WorkFlow" src="https://microsoft.github.io/autogen/assets/images/mathchatflow-926a8ed1975a114ab76c69996942c23a.png" width="2159" height="639" class="img_ev3q">
-<strong>TL;DR:</strong></p>
-<ul>
-<li><strong>We introduce MathChat, a conversational framework leveraging Large Language Models (LLMs), specifically GPT-4, to solve advanced mathematical problems.</strong></li>
-<li><strong>MathChat improves LLM's performance on challenging math problem-solving, outperforming basic prompting and other strategies by about 6%. The improvement was especially notable in the Algebra category, with a 15% increase in accuracy.</strong></li>
-<li><strong>Despite the advancement, GPT-4 still struggles to solve very challenging math problems, even with effective prompting strategies. Further improvements are needed, such as the development of more specific assistant models or the integration of new tools and prompts.</strong></li>
-</ul>
-<p>Recent Large Language Models (LLMs) like GTP-3.5 and GPT-4 have demonstrated astonishing abilities over previous models on various tasks, such as text generation, question answering, and code generation. Moreover, these models can communicate with humans through conversations and remember previous contexts, making it easier for humans to interact with them. These models play an increasingly important role in our daily lives assisting people with different tasks, such as writing emails, summarizing documents, and writing code.</p>
-<p>In this blog post, we probe into the problem-solving capabilities of LLMs. Specifically, we are interested in their capabilities to solve advanced math problems, which could be representative of a broader class of problems that require precise reasoning and also have deterministic solutions.</p>
-<p>We introduce MathChat, a conversational framework designed for solving challenging math problems with LLMs. This framework takes advantage of the chat-optimized feature of state-of-the-art LLMs, where a user proxy agent and an LLM assistant work together to tackle math problems. We also test previous prompting techniques for comparison.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="the-mathchat-framework">The MathChat Framework<a href="https://microsoft.github.io/autogen/blog/2023/06/28/MathChat#the-mathchat-framework" class="hash-link" aria-label="Direct link to The MathChat Framework" title="Direct link to The MathChat Framework">​</a></h2>
-<p>MathChat simulates a conversation between the LLM assistant and a user proxy agent. As the name indicates, the user proxy agent acts as a proxy for the user, which is responsible for communicating with the LLM assistant and continuing the conversation in a desired manner.</p>
-<p>The proxy agent first presents a math problem to the LLM assistant, framed by an initial prompt that guides the assistant in how it should work collaboratively to solve the problem. We incorporate existing prompting methods such as CoT (chain-of-thought) and tool-using are incorporated in the initial prompt. Key components of the prompt include:</p>
-<ul>
-<li>
-<p><strong>Tool-using Prompt:</strong> This guides the LLM assistant to use Python code in the correct format to address the problem, allowing the user proxy agent to parse the code and provide the appropriate results.</p>
-</li>
-<li>
-<p><strong>Problem-Solving Strategy Selection Prompt:</strong> The assistant is instructed to choose one of three potential problem-solving strategies, including:</p>
-<ol>
-<li>Writing a Python program to solve the problem directly.</li>
-<li>Solving the problem directly without using Python, which exercises LLMs' inherent reasoning capabilities.</li>
-<li>Solving the problem step by step with Python. This should be used when the first two strategies aren't suitable.</li>
-</ol>
-</li>
-<li>
-<p><strong>Final Answer Encapsulation Prompt:</strong> This part instructs the assistant to put the final answer in <em>\boxed</em>.</p>
-</li>
-</ul>
-<p>The prompt design in MathChat is flexible and can easily be refined to include other tools, such as Wolfram Alpha.</p>
-<p>Let's take a look at an example between the <strong>User Proxy Agent</strong> and the <strong>LLM Assistant</strong> (GPT-4). The conversation focuses on how to solve inequality using Python.
-(The conversation is modified for readability.)</p>
-<table><thead><tr><th>Participant</th><th>Dialogue</th></tr></thead><tbody><tr><td>User Proxy Agent</td><td>(Initial Prompt: Let's solve a math problem with Python...) Problem: Find all x that satisfy the inequality (2x+10)(x+3) &lt; (3x+9)(x+8). Express your answer in interval notation.</td></tr><tr><td>LLM assistant</td><td>The key idea to solve this problem is to find the critical points, which are the points where the inequality is equal. Then, test the intervals between the critical points to find the interval for which the inequality holds.</td></tr><tr><td>LLM assistant (continued)</td><td>Here's Python code to find the critical points: <code>from sympy import symbols, Eq, solve; x = symbols("x"); lhs = (2*x + 10)*(x + 3); rhs = (3*x + 9)*(x + 8); equation = Eq(lhs, rhs); critical_points = solve(equation, x); critical_points</code></td></tr><tr><td>User Proxy Agent</td><td>The critical points are: [-14, -3]</td></tr><tr><td>LLM assistant</td><td>We found the critical points to be x = -14 and x = -3. Now we'll test the intervals between these critical points as well as points before and after the critical points. The intervals are: x &lt; -14, -14 &lt; x &lt; -3, x &gt; -3.</td></tr><tr><td>LLM assistant (continued)</td><td>Here's Python code to test the inequality for each interval: <code>from sympy import symbols; x = symbols("x"); inequality = (2*x + 10)*(x + 3) &lt; (3*x + 9)*(x + 8); test_points = [-15, -5, 0]; intervals = []; for point in test_points: if inequality.subs(x, point): intervals.append(point); intervals</code></td></tr><tr><td>User Proxy Agent</td><td>The intervals where the inequality holds true are for test points: [-15, 0]</td></tr><tr><td>LLM assistant</td><td>We have tested the intervals and found that the inequality holds for: 1. x &lt; -14 (test point: -15) 2. x &gt; -3 (test point: 0). Therefore, the solution to the inequality (2x+10)(x+3) &lt; (3x+9)(x+8) is x ∈ (-∞, -14) ∪ (-3, ∞)</td></tr></tbody></table>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="experiment-setup">Experiment Setup<a href="https://microsoft.github.io/autogen/blog/2023/06/28/MathChat#experiment-setup" class="hash-link" aria-label="Direct link to Experiment Setup" title="Direct link to Experiment Setup">​</a></h2>
-<p>We evaluate the improvement brought by MathChat.</p>
-<p>For the experiment, we focus on the level-5 problems from the MATH dataset, which are composed of high school competition problems. These problems include the application of theorems and complex equation derivation and are challenging even for undergraduate students. We evaluate 6 of 7 categories from the dataset (excluding Geometry): Prealgebra, Algebra, Number Theory, Counting and Probability, Intermediate Algebra, and Precalculus.</p>
-<p>We evaluate GPT-4 and use the default configuration of the OpenAI API. To access the final performance, we manually compare the final answer with the correct answer. For the vanilla prompt, Program Synthesis, and MathChat, we have GPT-4 enclose the final answer in <em>\boxed</em>, and we take the return of the function in PoT as the final answer.</p>
-<p>We also evaluate the following methods for comparison:</p>
-<ol>
-<li>
-<p><strong>Vanilla prompting:</strong> Evaluates GPT-4's direct problem-solving capability. The prompt used is: <em>" Solve the problem carefully. Put the final answer in \boxed<!-- -->"</em>.</p>
-</li>
-<li>
-<p><strong>Program of Thoughts (PoT):</strong> Uses a zero-shot PoT prompt that requests the model to create a <em>Solver</em> function to solve the problem and return the final answer.</p>
-</li>
-<li>
-<p><strong>Program Synthesis (PS) prompting:</strong> Like PoT, it prompts the model to write a program to solve the problem. The prompt used is: <em>"Write a program that answers the following question: {Problem}"</em>.</p>
-</li>
-</ol>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="experiment-results">Experiment Results<a href="https://microsoft.github.io/autogen/blog/2023/06/28/MathChat#experiment-results" class="hash-link" aria-label="Direct link to Experiment Results" title="Direct link to Experiment Results">​</a></h2>
-<p>The accuracy on all the problems with difficulty level-5 from different categories of the MATH dataset with different methods is shown below:</p>
-<p><img decoding="async" loading="lazy" alt="Result" src="https://microsoft.github.io/autogen/assets/images/result-514251f4c387d5b6e11656e1fa33de08.png" width="1470" height="326" class="img_ev3q"></p>
-<p>We found that compared to basic prompting, which demonstrates the innate capabilities of GPT-4, utilizing Python within the context of PoT or PS strategy improved the overall accuracy by about 10%. This increase was mostly seen in categories involving more numerical manipulations, such as Counting &amp; Probability and Number Theory, and in more complex categories like Intermediate Algebra and Precalculus.</p>
-<p>For categories like Algebra and Prealgebra, PoT and PS showed little improvement, and in some instances, even led to a decrease in accuracy. However, MathChat was able to enhance total accuracy by around 6% compared to PoT and PS, showing competitive performance across all categories. Remarkably, MathChat improved accuracy in the Algebra category by about 15% over other methods. Note that categories like Intermediate Algebra and Precalculus remained challenging for all methods, with only about 20% of problems solved accurately.</p>
-<p>The code for experiments can be found at this <a href="https://github.com/kevin666aa/FLAML/tree/gpt_math_solver/flaml/autogen/math" target="_blank" rel="noopener noreferrer">repository</a>.
-We now provide an implementation of MathChat using the interactive agents in AutoGen. See this <a href="https://github.com/microsoft/autogen/blob/main/notebook/agentchat_MathChat.ipynb" target="_blank" rel="noopener noreferrer">notebook</a> for example usage.</p>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="future-directions">Future Directions<a href="https://microsoft.github.io/autogen/blog/2023/06/28/MathChat#future-directions" class="hash-link" aria-label="Direct link to Future Directions" title="Direct link to Future Directions">​</a></h2>
-<p>Despite MathChat's improvements over previous methods, the results show that complex math problem is still challenging for recent powerful LLMs, like GPT-4, even with help from external tools.</p>
-<p>Further work can be done to enhance this framework or math problem-solving in general:</p>
-<ul>
-<li>Although enabling the model to use tools like Python can reduce calculation errors, LLMs are still prone to logic errors. Methods like self-consistency (Sample several solutions and take a major vote on the final answer), or self-verification (use another LLM instance to check whether an answer is correct) might improve the performance.</li>
-<li>Sometimes, whether the LLM can solve the problem depends on the plan it uses. Some plans require less computation and logical reasoning, leaving less room for mistakes.</li>
-<li>MathChat has the potential to be adapted into a copilot system, which could assist users with math problems. This system could allow users to be more involved in the problem-solving process, potentially enhancing learning.</li>
-</ul>
-<h2 class="anchor anchorWithStickyNavbar_LWe7" id="for-further-reading">For Further Reading<a href="https://microsoft.github.io/autogen/blog/2023/06/28/MathChat#for-further-reading" class="hash-link" aria-label="Direct link to For Further Reading" title="Direct link to For Further Reading">​</a></h2>
-<ul>
-<li><a href="https://arxiv.org/abs/2306.01337" target="_blank" rel="noopener noreferrer">Research paper of MathChat</a></li>
-<li><a href="https://microsoft.github.io/autogen/docs/Getting-Started">Documentation about <code>autogen</code></a></li>
-</ul>
-<p><em>Are you working on applications that involve math problem-solving? Would you appreciate additional research or support on the application of LLM-based agents for math problem-solving? Please join our <a href="https://aka.ms/autogen-dc" target="_blank" rel="noopener noreferrer">Discord</a> server for discussion.</em></p>]]></content:encoded>
-            <category>LLM</category>
-            <category>GPT</category>
-            <category>research</category>
         </item>
     </channel>
 </rss>
